@@ -36,6 +36,7 @@ if __name__ == "__main__":
     data, targets = next(iter(trainloader))
     flat_data = torch.reshape(data, (data.shape[0], data.shape[1], -1))
     print('data shape: ', data.shape)
+    print('targets shape: ', targets.shape)
     print('flat data shape: ', flat_data.shape)
 
     in_sz = flat_data.shape[-1]
@@ -61,7 +62,7 @@ if __name__ == "__main__":
     with torch.no_grad():
         start_time = time.time()
         for i, (data, targets) in enumerate(iter(trainloader)):
-            if i%25 == 24:
+            if i%25 == 0:
                 print("train batches completed: ", i)
             flat_data = torch.reshape(data, (data.shape[0], data.shape[1], -1)).to(device)
             part_steps = flat_data.shape[0]//num_partitions

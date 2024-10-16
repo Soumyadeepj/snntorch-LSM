@@ -571,7 +571,6 @@ def initWeights_partition_cross_partition_inh(LqWin, LqWlsm, LqWlsm_long, in_con
 
     return W_ins,W_lsm.T,W_lsm_long.T #need to transpose matrices for compatibility with torch nn linear
 
-
 def initWeights_short_long_dist_partition(LqWin, LqWlsm, in_conn_density, in_size, long_dist, num_partitions, lam=9, inh_fr=0.2, Nx=10, Ny=10, Nz=10, init_Wlsm=True, W_lsm=None):
     partition_Nz = Nz//num_partitions
     N = Nx*Ny*Nz

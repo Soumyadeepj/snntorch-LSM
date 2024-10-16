@@ -18,11 +18,11 @@ if __name__ == "__main__":
     frame_transform = transforms.Compose([transforms.Denoise(filter_time=3000),
                                           transforms.ToFrame(sensor_size=sensor_size,time_window=1000)])
 
-    trainset = tonic.datasets.NMNIST(save_to='../data', transform=frame_transform, train=True)
-    testset = tonic.datasets.NMNIST(save_to='../data', transform=frame_transform, train=False)
+    trainset = tonic.datasets.NMNIST(save_to='./data', transform=frame_transform, train=True)
+    testset = tonic.datasets.NMNIST(save_to='./data', transform=frame_transform, train=False)
 
-    cached_trainset = DiskCachedDataset(trainset, cache_path='../cache/nmnist/train')
-    cached_testset = DiskCachedDataset(testset, cache_path='../cache/nmnist/test')
+    cached_trainset = DiskCachedDataset(trainset, cache_path='./cache/nmnist/train')
+    cached_testset = DiskCachedDataset(testset, cache_path='./cache/nmnist/test')
 
     batch_size = 256
     trainloader = DataLoader(cached_trainset, batch_size=batch_size, collate_fn=tonic.collation.PadTensors(batch_first=False), shuffle=True)

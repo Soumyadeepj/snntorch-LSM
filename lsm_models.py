@@ -2,26 +2,46 @@ import torch
 import torchvision
 from torch.utils.data import DataLoader
 import torch.nn as nn
-
+import torch.nn.functional as F
 import snntorch as snn
 
 class LSM(nn.Module):
+    # def __init__(self, N, in_sz, Win, Wlsm, alpha=0.9, beta=0.9, th=20):
+    #     super().__init__()
+    #     self.fc1 = nn.Linear(in_sz, N)
+    #     self.fc1.weight = nn.Parameter(torch.from_numpy(Win))
+    #     self.lm = snn.RSynaptic(alpha=alpha, beta=beta, all_to_all=True, linear_features=N, threshold=th)
+    #     self.lm.recurrent.weight = nn.Parameter(torch.from_numpy(Wlsm))
+    # def forward(self, x):
+    #     num_steps = x.size(0)
+    #     spk, syn, mem = self.lm.init_rsynaptic()
+    #     spk_rec = []
+    #     for step in range(num_steps):
+    #         curr = self.fc1(x[step])
+    #         spk, syn, mem = self.lm(curr, spk, syn, mem)
+    #         spk_rec.append(spk)
+    #     spk_rec_out = torch.stack(spk_rec)
+    #     return spk_rec_out
     def __init__(self, N, in_sz, Win, Wlsm, alpha=0.9, beta=0.9, th=20):
         super().__init__()
         self.fc1 = nn.Linear(in_sz, N)
-        self.fc1.weight = nn.Parameter(torch.from_numpy(Win))
-        self.lsm = snn.RSynaptic(alpha=alpha, beta=beta, all_to_all=True, linear_features=N, threshold=th)
-        self.lsm.recurrent.weight = nn.Parameter(torch.from_numpy(Wlsm))
+        self.fc1.weight = nn.Parameter(torch.from_numpy(Win), requires_grad=False)  # Input-to-reservoir weights (Win) are not trained
+        self.recurrent_weight = nn.Parameter(torch.from_numpy(Wlsm), requires_grad=False)  # Reservoir (Wlsm) weights are fixed
+        self.activation = nn.Tanh()  # Typical ESN activation function
+
     def forward(self, x):
         num_steps = x.size(0)
-        spk, syn, mem = self.lsm.init_rsynaptic()
-        spk_rec = []
+        hidden_state = torch.zeros(self.fc1.out_features)  # Initialize the reservoir state
+        hidden_states_rec = []
+
         for step in range(num_steps):
-            curr = self.fc1(x[step])
-            spk, syn, mem = self.lsm(curr, spk, syn, mem)
-            spk_rec.append(spk)
-        spk_rec_out = torch.stack(spk_rec)
-        return spk_rec_out
+            curr_input = self.fc1(x[step])  # Linear transformation for input
+            # Update hidden state with recurrent connection and activation
+            hidden_state = self.activation(curr_input + torch.matmul(hidden_state, self.recurrent_weight))
+            hidden_states_rec.append(hidden_state)
+
+        hidden_states_out = torch.stack(hidden_states_rec)
+        return hidden_states_out
 
 class LSM_partition(nn.Module):
     def __init__(self, N, in_sz, Wins, Wlsm, num_partitions, alpha=0.9, beta=0.9, th=20):
